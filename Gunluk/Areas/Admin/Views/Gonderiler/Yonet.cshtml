@@ -6,6 +6,12 @@
 
 
 <form method="post">
+
+    @if (action == "Duzenle") 
+     { 
+        <input asp-for="Id" type="hidden" />
+     }
+
     <div class="mb-3">
         <label asp-for="Baslik" class="form-label">Başlık</label>
         <input asp-for="Baslik" type="text" class="form-control" placeholder="Başlık">

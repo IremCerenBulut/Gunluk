@@ -16,7 +16,7 @@ namespace Gunluk.Areas.Admin.Controllers
         public IActionResult Index(string? durum)
         {
             ViewBag.Mesaj = durum == "eklendi" ? "Gönderi başarıyla oluşturuldu." :
-                        durum == "Duzenlendi" ? "Gönderiniz başarıyla düzenlendi" :
+                        durum == "duzenlendi" ? "Gönderiniz başarıyla düzenlendi" :
                         durum == "silindi" ? "Gönderi başarıyla silindi." : null;
 
             return View(_db.Gonderiler.Include(x=>x.Kategori).ToList());
@@ -51,7 +51,54 @@ namespace Gunluk.Areas.Admin.Controllers
         }
         public IActionResult Duzenle(int id)
         {
+            var gonderi = _db.Gonderiler.Find(id);
+
+            if(gonderi==null)
+                return NotFound();
+            var vm = new GonderiViewModel()
+            {
+                Baslik=gonderi.Baslik,
+                Icerik=gonderi.Icerik,
+                Id=gonderi.Id,
+                KategoriId=gonderi.KategoriId
+            };
+
+            KategoriYukle();
+            return View("Yonet", vm);
+        }
+        [HttpPost, ValidateAntiForgeryToken]
+        public IActionResult Duzenle(GonderiViewModel vm)
+        {
+            if (ModelState.IsValid)
+            {
+                var gonderi = _db.Gonderiler.Find(vm.Id);
+                if (gonderi == null)
+                    return NotFound();
+
+                gonderi.Baslik=vm.Baslik;
+                gonderi.Icerik = vm.Icerik;
+                gonderi.DegistirilmeZamani = DateTime.Now;
+                gonderi.KategoriId = vm.KategoriId!.Value;
+               
+                _db.SaveChanges();
+                return RedirectToAction(nameof(Index), new { durum = "duzenlendi" });
+            }
+            KategoriYukle();
             return View("Yonet");
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+
+        public IActionResult Sil(int id)
+        {
+            var gonderi = _db.Gonderiler.Find(id);
+            if (gonderi == null)
+                return NotFound();
+
+            _db.Gonderiler.Remove(gonderi);
+            _db.SaveChanges();
+
+            return RedirectToAction(nameof(Index), new { durum = "silindi" });
         }
     }
 }
